@@ -1,0 +1,191 @@
+{
+  "info": {
+    "name": "Intern Task Tracker API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api" },
+    { "key": "supervisorToken", "value": "" },
+    { "key": "internToken", "value": "" },
+    { "key": "internId", "value": "" },
+    { "key": "taskId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth - Login (Supervisor)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"supervisor@demo.com\",\n  \"password\": \"Supervisor123!\"\n}"
+        },
+        "url": "{{baseUrl}}/auth/login"
+      }
+    },
+    {
+      "name": "Auth - Login (Intern)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"intern@demo.com\",\n  \"password\": \"Intern123!\"\n}"
+        },
+        "url": "{{baseUrl}}/auth/login"
+      }
+    },
+    {
+      "name": "Auth - Me",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{supervisorToken}}" }],
+        "url": "{{baseUrl}}/auth/me"
+      }
+    },
+    {
+      "name": "Supervisor - Create Intern",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{supervisorToken}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Jane Intern\",\n  \"email\": \"jane@demo.com\",\n  \"password\": \"Password123!\"\n}"
+        },
+        "url": "{{baseUrl}}/users/intern"
+      }
+    },
+    {
+      "name": "Supervisor - List Interns",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{supervisorToken}}" }],
+        "url": "{{baseUrl}}/users/interns"
+      }
+    },
+    {
+      "name": "Supervisor - Activate/Deactivate Intern",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{supervisorToken}}" }
+        ],
+        "body": { "mode": "raw", "raw": "{\n  \"isActive\": false\n}" },
+        "url": "{{baseUrl}}/users/intern/{{internId}}/status"
+      }
+    },
+    {
+      "name": "Supervisor - Create Task",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{supervisorToken}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Set up dev environment\",\n  \"description\": \"Install Node, Mongo, clone repo\",\n  \"priority\": \"high\",\n  \"dueDate\": \"2026-09-15\",\n  \"assignedTo\": \"{{internId}}\"\n}"
+        },
+        "url": "{{baseUrl}}/tasks"
+      }
+    },
+    {
+      "name": "Supervisor - Get All Tasks",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{supervisorToken}}" }],
+        "url": "{{baseUrl}}/tasks"
+      }
+    },
+    {
+      "name": "Supervisor - Update Task",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{supervisorToken}}" }
+        ],
+        "body": { "mode": "raw", "raw": "{\n  \"status\": \"in_progress\"\n}" },
+        "url": "{{baseUrl}}/tasks/{{taskId}}"
+      }
+    },
+    {
+      "name": "Supervisor - Delete Task",
+      "request": {
+        "method": "DELETE",
+        "header": [{ "key": "Authorization", "value": "Bearer {{supervisorToken}}" }],
+        "url": "{{baseUrl}}/tasks/{{taskId}}"
+      }
+    },
+    {
+      "name": "Supervisor - Get All Updates (grouped by intern)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{supervisorToken}}" }],
+        "url": "{{baseUrl}}/updates?groupBy=intern"
+      }
+    },
+    {
+      "name": "Intern - Get My Tasks",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{internToken}}" }],
+        "url": "{{baseUrl}}/tasks/my"
+      }
+    },
+    {
+      "name": "Intern - Submit Update",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{internToken}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"taskId\": \"{{taskId}}\",\n  \"type\": \"update\",\n  \"content\": \"Finished environment setup, starting on task 2.\"\n}"
+        },
+        "url": "{{baseUrl}}/updates"
+      }
+    },
+    {
+      "name": "Intern - Submit Self Task",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{internToken}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"type\": \"self_task\",\n  \"content\": \"Read through onboarding docs.\"\n}"
+        },
+        "url": "{{baseUrl}}/updates"
+      }
+    },
+    {
+      "name": "Intern - Get My Update History",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{internToken}}" }],
+        "url": "{{baseUrl}}/updates/my"
+      }
+    },
+    {
+      "name": "Blocked - Intern Edit Update (expect 403)",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{internToken}}" }
+        ],
+        "body": { "mode": "raw", "raw": "{\n  \"content\": \"trying to edit\"\n}" },
+        "url": "{{baseUrl}}/updates/someUpdateId"
+      }
+    }
+  ]
+}

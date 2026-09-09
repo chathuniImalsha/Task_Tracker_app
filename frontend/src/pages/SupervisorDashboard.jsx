@@ -219,10 +219,10 @@ export default function SupervisorDashboard() {
         fieldName === "dueDate"
           ? "due date"
           : fieldName === "priority"
-          ? "priority"
-          : fieldName === "status"
-          ? "status"
-          : fieldName;
+            ? "priority"
+            : fieldName === "status"
+              ? "status"
+              : fieldName;
       showSuccess(`Task ${fieldLabel} updated successfully.`);
       await loadData();
     } catch (err) {
@@ -563,14 +563,14 @@ export default function SupervisorDashboard() {
                               t.priority === "high"
                                 ? "var(--priority-high-bg)"
                                 : t.priority === "low"
-                                ? "var(--priority-low-bg)"
-                                : "var(--priority-med-bg)",
+                                  ? "var(--priority-low-bg)"
+                                  : "var(--priority-med-bg)",
                             color:
                               t.priority === "high"
                                 ? "var(--priority-high)"
                                 : t.priority === "low"
-                                ? "var(--priority-low)"
-                                : "var(--priority-med)",
+                                  ? "var(--priority-low)"
+                                  : "var(--priority-med)",
                             border: "1px solid var(--border-color)",
                           }}
                           aria-label={`Change priority for ${t.title}`}
@@ -598,18 +598,18 @@ export default function SupervisorDashboard() {
                               t.status === "completed"
                                 ? "var(--status-completed-bg)"
                                 : t.status === "in_progress"
-                                ? "var(--status-inprogress-bg)"
-                                : t.status === "blocked"
-                                ? "var(--status-blocked-bg)"
-                                : "var(--status-notstarted-bg)",
+                                  ? "var(--status-inprogress-bg)"
+                                  : t.status === "blocked"
+                                    ? "var(--status-blocked-bg)"
+                                    : "var(--status-notstarted-bg)",
                             color:
                               t.status === "completed"
                                 ? "var(--status-completed)"
                                 : t.status === "in_progress"
-                                ? "var(--status-inprogress)"
-                                : t.status === "blocked"
-                                ? "var(--status-blocked)"
-                                : "var(--status-notstarted)",
+                                  ? "var(--status-inprogress)"
+                                  : t.status === "blocked"
+                                    ? "var(--status-blocked)"
+                                    : "var(--status-notstarted)",
                             border: "1px solid var(--border-color)",
                           }}
                           aria-label={`Change status for ${t.title}`}

@@ -817,8 +817,8 @@ export default function InternDashboard() {
               {form.type === "blocker"
                 ? "Blocker Description *"
                 : form.type === "self_task"
-                ? "Self-Task Description & Notes *"
-                : "Progress Details & Notes *"}
+                  ? "Self-Task Description & Notes *"
+                  : "Progress Details & Notes *"}
             </label>
             <textarea
               id="intern-content-textarea"
@@ -827,8 +827,8 @@ export default function InternDashboard() {
                 form.type === "blocker"
                   ? "Describe the impediment, what is preventing you from making progress, and any support required..."
                   : form.type === "self_task"
-                  ? "Detail the independent work you completed, research conducted, and outcomes..."
-                  : "Describe the progress made, tasks completed today, or notes for your supervisor..."
+                    ? "Detail the independent work you completed, research conducted, and outcomes..."
+                    : "Describe the progress made, tasks completed today, or notes for your supervisor..."
               }
               value={form.content}
               onChange={(e) => setForm({ ...form, content: e.target.value })}
@@ -866,22 +866,21 @@ export default function InternDashboard() {
           {/* Submit Button */}
           <button
             type="submit"
-            className={`btn ${
-              form.type === "blocker"
-                ? "btn-danger"
-                : form.type === "self_task"
+            className={`btn ${form.type === "blocker"
+              ? "btn-danger"
+              : form.type === "self_task"
                 ? "btn-primary"
                 : "btn-primary"
-            }`}
+              }`}
             disabled={submitting}
           >
             {submitting
               ? "Recording Entry..."
               : form.type === "blocker"
-              ? "Report Blocker"
-              : form.type === "self_task"
-              ? "Submit Self Task"
-              : "Submit Progress Update"}
+                ? "Report Blocker"
+                : form.type === "self_task"
+                  ? "Submit Self Task"
+                  : "Submit Progress Update"}
           </button>
         </form>
       </div>
@@ -986,8 +985,8 @@ export default function InternDashboard() {
                           {u.type === "update"
                             ? "Progress Update"
                             : u.type === "blocker"
-                            ? "Blocker"
-                            : "Self-Logged Task"}
+                              ? "Blocker"
+                              : "Self-Logged Task"}
                         </span>
                       </span>
                     </div>

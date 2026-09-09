@@ -11,11 +11,6 @@ export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleFillCredentials = (demoEmail, demoPassword) => {
-    setEmail(demoEmail);
-    setPassword(demoPassword);
-    setError("");
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -186,46 +181,6 @@ export default function Login() {
           </button>
         </form>
 
-        {/* Quick Demo Fill Buttons */}
-        <div style={{
-          marginTop: "1.75rem",
-          paddingTop: "1.5rem",
-          borderTop: "1px solid var(--border-color-subtle)"
-        }}>
-          <p style={{
-            fontSize: "0.75rem",
-            fontWeight: 700,
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
-            color: "var(--text-muted)",
-            marginBottom: "0.75rem",
-            textAlign: "center"
-          }}>
-            Instant Demo Logins
-          </p>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={() => handleFillCredentials("supervisor@demo.com", "Supervisor123!")}
-              style={{ display: "flex", flexDirection: "column", gap: "2px", padding: "0.6rem" }}
-            >
-              <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>Supervisor</span>
-              <span style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>supervisor@demo.com</span>
-            </button>
-
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={() => handleFillCredentials("intern@demo.com", "Intern123!")}
-              style={{ display: "flex", flexDirection: "column", gap: "2px", padding: "0.6rem" }}
-            >
-              <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>Intern</span>
-              <span style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>intern@demo.com</span>
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );

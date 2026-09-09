@@ -19,6 +19,7 @@ export default function SupervisorDashboard() {
 
   // Modals state
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isEditTaskModalOpen, setIsEditTaskModalOpen] = useState(false);
   const [isInternModalOpen, setIsInternModalOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState(null);
 
@@ -28,6 +29,16 @@ export default function SupervisorDashboard() {
     title: "",
     description: "",
     priority: "medium",
+    dueDate: "",
+    assignedTo: "",
+  });
+
+  const [editingTask, setEditingTask] = useState({
+    _id: "",
+    title: "",
+    description: "",
+    priority: "medium",
+    status: "not_started",
     dueDate: "",
     assignedTo: "",
   });
@@ -50,8 +61,9 @@ export default function SupervisorDashboard() {
         api.get("/users/interns"),
         api.get("/tasks"),
       ]);
-      setInterns(internsRes.data.interns || []);
-      setTasks(tasksRes.data.tasks || []);
+
+      setInterns(internsRes.data?.interns || []);
+      setTasks(tasksRes.data?.tasks || []);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load dashboard data");
     } finally {
@@ -71,7 +83,7 @@ export default function SupervisorDashboard() {
         setUpdates([]);
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to load activity updates");
+      console.warn("Activity updates load failed:", err.message);
     }
   };
 
@@ -138,7 +150,7 @@ export default function SupervisorDashboard() {
     }
   };
 
-  // Create Task
+  // 1. Create & Assign Task
   const handleCreateTask = async (e) => {
     e.preventDefault();
     setError("");
@@ -156,18 +168,69 @@ export default function SupervisorDashboard() {
     }
   };
 
-  // Update Task Status
-  const handleUpdateStatus = async (id, status) => {
+  // 2. Open Edit Task Modal
+  const handleOpenEditTask = (task) => {
+    setEditingTask({
+      _id: task._id,
+      title: task.title || "",
+      description: task.description || "",
+      priority: task.priority || "medium",
+      status: task.status || "not_started",
+      dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : "",
+      assignedTo: task.assignedTo?._id || task.assignedTo || "",
+    });
+    setIsEditTaskModalOpen(true);
+  };
+
+  // 3. Save Edit Task (Update title, description, priority, status, due date, assignee)
+  const handleSaveEditTask = async (e) => {
+    e.preventDefault();
+    if (!editingTask._id) return;
+    setError("");
+    setSubmitting(true);
     try {
-      await api.patch(`/tasks/${id}`, { status });
-      showSuccess("Task status updated.");
+      const payload = {
+        title: editingTask.title,
+        description: editingTask.description,
+        priority: editingTask.priority,
+        status: editingTask.status,
+        dueDate: editingTask.dueDate || null,
+        assignedTo: editingTask.assignedTo,
+      };
+
+      await api.patch(`/tasks/${editingTask._id}`, payload);
+      setIsEditTaskModalOpen(false);
+      showSuccess("Task updated successfully.");
       await loadData();
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to update task status");
+      setError(err.response?.data?.message || "Failed to update task");
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  // Delete Task
+  // 4. Quick Inline Update for status, priority, or due date
+  const handleUpdateTaskField = async (taskId, fieldName, value) => {
+    try {
+      const payload = { [fieldName]: value };
+      await api.patch(`/tasks/${taskId}`, payload);
+
+      const fieldLabel =
+        fieldName === "dueDate"
+          ? "due date"
+          : fieldName === "priority"
+          ? "priority"
+          : fieldName === "status"
+          ? "status"
+          : fieldName;
+      showSuccess(`Task ${fieldLabel} updated successfully.`);
+      await loadData();
+    } catch (err) {
+      setError(err.response?.data?.message || `Failed to update task ${fieldName}`);
+    }
+  };
+
+  // 5. Delete Task
   const confirmDeleteTask = async () => {
     if (!taskToDelete) return;
     try {
@@ -197,7 +260,7 @@ export default function SupervisorDashboard() {
         <div>
           <h1 className="page-title">Supervisor Dashboard</h1>
           <p className="page-subtitle">
-            Oversee interns, delegate assignments, and review progress submissions.
+            Oversee interns, delegate assignments, update task details, and review progress submissions.
           </p>
         </div>
 
@@ -421,60 +484,135 @@ export default function SupervisorDashboard() {
               <table className="modern-table">
                 <thead>
                   <tr>
-                    <th>Task Details</th>
-                    <th>Assigned Intern</th>
-                    <th>Priority</th>
-                    <th>Status</th>
-                    <th>Due Date</th>
-                    <th style={{ textAlign: "right" }}>Actions</th>
+                    <th style={{ minWidth: 220 }}>Task Details</th>
+                    <th style={{ minWidth: 160 }}>Assigned Intern</th>
+                    <th style={{ minWidth: 120 }}>Priority</th>
+                    <th style={{ minWidth: 135 }}>Status</th>
+                    <th style={{ minWidth: 145 }}>Due Date</th>
+                    <th style={{ textAlign: "right", minWidth: 110 }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredTasks.map((t) => (
                     <tr key={t._id}>
-                      <td style={{ maxWidth: 300 }}>
+                      <td style={{ maxWidth: 280 }}>
                         <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>{t.title}</div>
                         {t.description && (
-                          <div style={{ fontSize: "0.8125rem", color: "var(--text-secondary)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          <div
+                            style={{
+                              fontSize: "0.8125rem",
+                              color: "var(--text-secondary)",
+                              marginTop: 2,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                            title={t.description}
+                          >
                             {t.description}
                           </div>
                         )}
                       </td>
                       <td>
                         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                          <span style={{
-                            width: 24,
-                            height: 24,
-                            borderRadius: "50%",
-                            background: "#e0f2fe",
-                            color: "#0369a1",
-                            fontSize: "0.7rem",
-                            fontWeight: 700,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center"
-                          }}>
+                          <span
+                            style={{
+                              width: 26,
+                              height: 26,
+                              borderRadius: "50%",
+                              background: "#e0f2fe",
+                              color: "#0369a1",
+                              fontSize: "0.75rem",
+                              fontWeight: 700,
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexShrink: 0,
+                            }}
+                          >
                             {t.assignedTo?.name ? t.assignedTo.name[0].toUpperCase() : "?"}
                           </span>
-                          <span style={{ fontWeight: 500 }}>{t.assignedTo?.name || "Unassigned"}</span>
+                          <div>
+                            <div style={{ fontWeight: 500, fontSize: "0.875rem" }}>
+                              {t.assignedTo?.name || "Unassigned"}
+                            </div>
+                            {t.assignedTo?.email && (
+                              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                                {t.assignedTo.email}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </td>
+
+                      {/* Quick Inline Priority Updater */}
                       <td>
-                        <span className={`badge badge-priority-${t.priority}`}>
-                          {t.priority}
-                        </span>
+                        <select
+                          className="form-select"
+                          value={t.priority}
+                          onChange={(e) => handleUpdateTaskField(t._id, "priority", e.target.value)}
+                          style={{
+                            padding: "0.25rem 0.5rem",
+                            fontSize: "0.8125rem",
+                            fontWeight: 600,
+                            width: "auto",
+                            borderRadius: "var(--radius-sm)",
+                            textTransform: "capitalize",
+                            cursor: "pointer",
+                            background:
+                              t.priority === "high"
+                                ? "var(--priority-high-bg)"
+                                : t.priority === "low"
+                                ? "var(--priority-low-bg)"
+                                : "var(--priority-med-bg)",
+                            color:
+                              t.priority === "high"
+                                ? "var(--priority-high)"
+                                : t.priority === "low"
+                                ? "var(--priority-low)"
+                                : "var(--priority-med)",
+                            border: "1px solid var(--border-color)",
+                          }}
+                          aria-label={`Change priority for ${t.title}`}
+                        >
+                          <option value="low">Low</option>
+                          <option value="medium">Medium</option>
+                          <option value="high">High</option>
+                        </select>
                       </td>
+
+                      {/* Quick Inline Status Updater */}
                       <td>
                         <select
                           className="form-select"
                           value={t.status}
-                          onChange={(e) => handleUpdateStatus(t._id, e.target.value)}
+                          onChange={(e) => handleUpdateTaskField(t._id, "status", e.target.value)}
                           style={{
-                            padding: "0.3rem 0.6rem",
+                            padding: "0.25rem 0.5rem",
                             fontSize: "0.8125rem",
+                            fontWeight: 600,
                             width: "auto",
-                            borderRadius: "var(--radius-sm)"
+                            borderRadius: "var(--radius-sm)",
+                            cursor: "pointer",
+                            background:
+                              t.status === "completed"
+                                ? "var(--status-completed-bg)"
+                                : t.status === "in_progress"
+                                ? "var(--status-inprogress-bg)"
+                                : t.status === "blocked"
+                                ? "var(--status-blocked-bg)"
+                                : "var(--status-notstarted-bg)",
+                            color:
+                              t.status === "completed"
+                                ? "var(--status-completed)"
+                                : t.status === "in_progress"
+                                ? "var(--status-inprogress)"
+                                : t.status === "blocked"
+                                ? "var(--status-blocked)"
+                                : "var(--status-notstarted)",
+                            border: "1px solid var(--border-color)",
                           }}
+                          aria-label={`Change status for ${t.title}`}
                         >
                           <option value="not_started">Not Started</option>
                           <option value="in_progress">In Progress</option>
@@ -482,28 +620,58 @@ export default function SupervisorDashboard() {
                           <option value="completed">Completed</option>
                         </select>
                       </td>
+
+                      {/* Quick Inline Due Date Updater */}
                       <td>
-                        {t.dueDate ? (
-                          <span style={{ fontSize: "0.8125rem", color: "var(--text-secondary)" }}>
-                            {new Date(t.dueDate).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
-                          </span>
-                        ) : (
-                          <span style={{ color: "var(--text-muted)", fontSize: "0.8125rem" }}>None</span>
-                        )}
+                        <input
+                          type="date"
+                          className="form-input"
+                          value={t.dueDate ? new Date(t.dueDate).toISOString().split("T")[0] : ""}
+                          onChange={(e) => handleUpdateTaskField(t._id, "dueDate", e.target.value)}
+                          style={{
+                            padding: "0.25rem 0.4rem",
+                            fontSize: "0.8125rem",
+                            width: "135px",
+                            borderRadius: "var(--radius-sm)",
+                            cursor: "pointer",
+                          }}
+                          title="Click to change due date"
+                          aria-label={`Change due date for ${t.title}`}
+                        />
                       </td>
-                      <td style={{ textAlign: "right" }}>
-                        <button
-                          type="button"
-                          className="btn btn-danger-ghost btn-sm"
-                          onClick={() => setTaskToDelete(t)}
-                          title="Delete task"
-                          aria-label={`Delete task ${t.title}`}
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="3 6 5 6 21 6"></polyline>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                          </svg>
-                        </button>
+
+                      {/* Actions: Edit & Delete */}
+                      <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                        <div style={{ display: "inline-flex", gap: "0.4rem", alignItems: "center" }}>
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => handleOpenEditTask(t)}
+                            title="Edit task full details"
+                            aria-label={`Edit task ${t.title}`}
+                            style={{ padding: "0.3rem 0.6rem", fontSize: "0.8125rem" }}
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                            <span>Edit</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            className="btn btn-danger-ghost btn-sm"
+                            onClick={() => setTaskToDelete(t)}
+                            title="Delete task"
+                            aria-label={`Delete task ${t.title}`}
+                            style={{ padding: "0.3rem 0.5rem" }}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="3 6 5 6 21 6"></polyline>
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -835,6 +1003,120 @@ export default function SupervisorDashboard() {
                 No active interns available. Please add or reactivate an intern first.
               </p>
             )}
+          </div>
+        </form>
+      </Modal>
+
+      {/* ===================== MODAL: EDIT TASK ===================== */}
+      <Modal
+        isOpen={isEditTaskModalOpen}
+        onClose={() => setIsEditTaskModalOpen(false)}
+        title="Edit Task"
+        footer={
+          <>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setIsEditTaskModalOpen(false)}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="edit-task-form"
+              className="btn btn-primary"
+              disabled={submitting}
+            >
+              {submitting ? "Saving Changes..." : "Save Changes"}
+            </button>
+          </>
+        }
+      >
+        <form id="edit-task-form" onSubmit={handleSaveEditTask}>
+          <div className="form-group">
+            <label className="form-label" htmlFor="edit-task-title">Task Title *</label>
+            <input
+              id="edit-task-title"
+              type="text"
+              className="form-input"
+              value={editingTask.title}
+              onChange={(e) => setEditingTask({ ...editingTask, title: e.target.value })}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label" htmlFor="edit-task-desc">Description / Objectives</label>
+            <textarea
+              id="edit-task-desc"
+              className="form-textarea"
+              value={editingTask.description}
+              onChange={(e) => setEditingTask({ ...editingTask, description: e.target.value })}
+            />
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+            <div className="form-group">
+              <label className="form-label" htmlFor="edit-task-priority">Priority Level</label>
+              <select
+                id="edit-task-priority"
+                className="form-select"
+                value={editingTask.priority}
+                onChange={(e) => setEditingTask({ ...editingTask, priority: e.target.value })}
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="edit-task-status">Status</label>
+              <select
+                id="edit-task-status"
+                className="form-select"
+                value={editingTask.status}
+                onChange={(e) => setEditingTask({ ...editingTask, status: e.target.value })}
+              >
+                <option value="not_started">Not Started</option>
+                <option value="in_progress">In Progress</option>
+                <option value="blocked">Blocked</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+            <div className="form-group">
+              <label className="form-label" htmlFor="edit-task-duedate">Due Date</label>
+              <input
+                id="edit-task-duedate"
+                type="date"
+                className="form-input"
+                value={editingTask.dueDate}
+                onChange={(e) => setEditingTask({ ...editingTask, dueDate: e.target.value })}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="edit-task-assignee">Assign / Reassign Intern *</label>
+              <select
+                id="edit-task-assignee"
+                className="form-select"
+                value={editingTask.assignedTo}
+                onChange={(e) => setEditingTask({ ...editingTask, assignedTo: e.target.value })}
+                required
+              >
+                <option value="">Select an intern...</option>
+                {interns
+                  .filter((i) => i.isActive)
+                  .map((i) => (
+                    <option key={i._id} value={i._id}>
+                      {i.name} ({i.email})
+                    </option>
+                  ))}
+              </select>
+            </div>
           </div>
         </form>
       </Modal>

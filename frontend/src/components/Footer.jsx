@@ -10,7 +10,7 @@ export default function Footer() {
             <span>All systems operational</span>
           </div>
           <span className="footer-demo-hint">
-            Demo Portal &bull; Role-based Access Control Active
+            Enterprise Portal &bull; Role-based Access Control Active
           </span>
         </div>
 

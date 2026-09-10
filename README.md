@@ -73,7 +73,7 @@ Create `.env` files.
 
 ```env
 PORT=5000
-MONGO_URI=mongodb+srv://admin:admin2003@cluster0.s5spy7o.mongodb.net/intern_task_tracker?appName=Cluster0
+MONGO_URI=mongodb+srv://admin:<password>@cluster0.s5spy7o.mongodb.net/intern_task_tracker?appName=Cluster0
 JWT_SECRET=someLongRandomSecretString12345
 JWT_EXPIRES_IN=7d
 CLIENT_URL=http://localhost:5173
